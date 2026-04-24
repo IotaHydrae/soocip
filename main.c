@@ -12,7 +12,7 @@
 // #define __always_inline inline __attribute__((always_inline))
 
 #define MAX_TASKS  4
-#define STACK_SIZE 256
+#define STACK_SIZE 16
 struct task_struct {
 	u32 *sp;
 };
@@ -115,13 +115,13 @@ void hard_fault_handler_c(uint32_t *push, uint32_t *regs, uint32_t ret_lr)
 	// pr_debug("RA  = 0x%08X    SR  = 0x%08X\n", (unsigned)ret_lr,
 	// 	 (unsigned)push[7]);
 
-	printf("regs(sp): %08x\n", regs[6]);
+	// printf("regs(sp): %08x\n", regs[6]);
 	printf("LR: %08x\n", ret_lr);
 	// pr_debug("WORDS @ SP: \n");
 
 	for (i = 0; i < 16; i++)
 		pr_debug("[sp, #0x%03X = 0x%08X] = 0x%08x\n", i * 4,
-			 (unsigned)&sp[i], (unsigned)sp[i]);
+			 (unsigned)sp, *(sp--));
 
 	// for (i = 0; i < 16; i++)
 	// 	pr_debug("[sp, #0x%03X = 0x%p] = 0x%08x\n", i * 4, sp, *(--sp));
@@ -201,11 +201,9 @@ void isr_systick(void)
 void start_scheduler(void)
 {
 	__set_PSP((u32)tasks[0].sp);
-	printf("PSP : 0x%08x\n", __get_PSP());
-
 	__set_CONTROL(0x02);
 
-	printf("%s, %p\n", __func__, start_scheduler);
+	printf("%s, PSP : 0x%08x\n", __func__, __get_PSP());
 	SCB->ICSR = SCB_ICSR_PENDSVSET_Msk;
 
 	for (;;)
@@ -215,6 +213,8 @@ void start_scheduler(void)
 void task_init(struct task_struct *task, void (*entry)(void), u32 *sp_top)
 {
 	u32 *sp = sp_top;
+
+	// printf("%s, %p\n", __func__, sp_top);
 
 	/* r0, r1, r2, r3, r12, lr, pc, xpsr */
 	*(--sp) = 0x01000000;
@@ -230,7 +230,8 @@ void task_init(struct task_struct *task, void (*entry)(void), u32 *sp_top)
 	for (int i = 0; i < 8; i++)
 		*(--sp) = 0;
 
-	task->sp = sp;
+	// printf("%s, %p\n", __func__, sp);
+	task->sp = sp_top;
 }
 
 int main()
@@ -253,7 +254,7 @@ int main()
 	// printf("%p, %X", dummy_stack, __get_PSP());
 	static u32 task1_stack[STACK_SIZE];
 	static u32 task2_stack[STACK_SIZE];
-	printf("0x%p\n", task1_stack + STACK_SIZE - 16);
+	printf("0x%p ~ 0x%p\n", task1_stack, task1_stack + STACK_SIZE);
 	// printf("0x%p\n", task2_stack);
 
 	task_init(&tasks[0], task1_func, task1_stack + STACK_SIZE);
