@@ -13,7 +13,7 @@ project(${PROJECT_NAME})
 pico_sdk_init()
 
 # rest of your project
-add_executable(${PROJECT_NAME} main.c systick.c)
+add_executable(${PROJECT_NAME} main.c systick.c handler.S)
 
 target_link_libraries(${PROJECT_NAME} pico_stdlib)
 
