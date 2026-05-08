@@ -22,6 +22,16 @@ struct task_struct *next = NULL;
 
 #define __WFI() asm volatile("wfi" ::: "memory")
 
+static __inline void __disable_irq(void)
+{
+    asm volatile("cpsid i");
+}
+
+static inline void __enable_irq(void)
+{
+    asm volatile("cpsie i");
+}
+
 static __inline void __ISB(void)
 {
 	asm volatile("isb 0xF" ::: "memory");
@@ -156,11 +166,11 @@ void isr_hardfault(void)
 void schedule(void)
 {
 	/* A simple Round Robin scheduler */
-	// asm volatile("cpsid i");
+	__disable_irq();
 	current = &tasks[current_task];
 	current_task = (current_task + 1) % MAX_TASKS;
 	next = &tasks[current_task];
-	// asm volatile("cpsie i");
+	__enable_irq();
 
 	// static uint count = 0;
 	// pr_debug("%s-[%d], switch to {%d} | %08x, %08x\n", __func__, count++,
