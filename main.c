@@ -133,17 +133,6 @@ void task1_func(void *data)
 	}
 }
 
-void task2_func(void *data)
-{
-	static uint count = 0;
-	for (;;) {
-		printf("\n++++++++++ %s, %04d ++++++++++\n", (char *)data,
-		       count++);
-		for (volatile uint i = 0; i < 1000000; i++)
-			;
-	}
-}
-
 void task3_func(void *data)
 {
 	int led_pin = PICO_DEFAULT_LED_PIN;
@@ -238,8 +227,10 @@ int main()
 
 	pr_debug("\n\n\nsoocip starting...\n\n");
 
+	/* we can use the same func for two tasks */
 	task_init(&tasks[0], task1_func, task1_stack + STACK_SIZE, "task-1");
-	task_init(&tasks[1], task2_func, task2_stack + STACK_SIZE, "task-2");
+	task_init(&tasks[1], task1_func, task2_stack + STACK_SIZE, "task-2");
+
 	task_init(&tasks[2], task3_func, task3_stack + STACK_SIZE, "task-3");
 
 	printf("%p\n", task1_stack + STACK_SIZE);
