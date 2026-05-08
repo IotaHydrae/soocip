@@ -194,7 +194,7 @@ void start_scheduler(void)
 	__set_PSP((u32)tasks[0].sp);
 	__set_CONTROL(0x02);
 
-	/* trigger SVC and start the first task, see `isr_scvall` */
+	/* trigger SVC and start the first task, see `isr_svcall` */
 	asm volatile("svc 0");
 
 	for (;;)
